@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bingoohuang/gou/file"
+
 	"github.com/bingoohuang/gonet"
 	"github.com/bingoohuang/gou/str"
 	"github.com/sirupsen/logrus"
@@ -117,18 +119,25 @@ func (l Location) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	file := r.URL.Path
+	serveFile := r.URL.Path
 	if l.Root != "" {
-		file = filepath.Join(l.Root, file)
+		serveFile = filepath.Join(l.Root, serveFile)
 	} else {
-		file = strings.TrimPrefix(file, "/")
+		serveFile = strings.TrimPrefix(serveFile, "/")
 	}
 
-	if strings.HasSuffix(file, "/index.html") {
+	if r.URL.Path == "/" && file.SingleFileExists(serveFile) != nil {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = fmt.Fprint(w, welcome)
+
+		return
+	}
+
+	if strings.HasSuffix(serveFile, "/index.html") {
 		r.URL.Path = "avoid index.html redirect... in ServeHTTP"
 	}
 
-	http.ServeFile(w, r, file)
+	http.ServeFile(w, r, serveFile)
 }
 
 // TryAppend tries to append the given suffix if it does not exists in the s.

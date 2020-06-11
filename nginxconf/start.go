@@ -27,7 +27,13 @@ func (s NginxServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	l := s.Locations.FindLocation(r)
 
 	if l == nil {
-		w.WriteHeader(http.StatusNotFound)
+		if r.URL.Path == "/" {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = fmt.Fprint(w, welcome)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+
 		return
 	}
 
