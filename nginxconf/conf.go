@@ -1,18 +1,12 @@
 package nginxconf
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/bingoohuang/gou/file"
-
-	"github.com/bingoohuang/gonet"
 	"github.com/bingoohuang/gou/str"
 	"github.com/sirupsen/logrus"
 )
@@ -37,7 +31,7 @@ const (
 	// so regular expressions will not be checked.
 	ModifierForward
 	// ModifierRegular like location ~ \.(gif|jpg|jpeg)$
-	// ModifierRegular like location ~* .(jpg|png|bmp).
+	// or like location ~* .(jpg|png|bmp).
 	ModifierRegular
 	// ModifierNone means none modifier for the location.
 	ModifierNone
@@ -90,54 +84,6 @@ func (l Location) Matches(p ModifierPriority, r *http.Request) bool {
 	default:
 		return strings.HasPrefix(path, l.Path)
 	}
-}
-
-func (l Location) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if l.ProxyPass != nil {
-		proxyPath := strings.TrimPrefix(r.URL.Path, l.Path)
-		targetHost := l.ProxyPass.Host
-		targetPath := filepath.Join(l.ProxyPass.Path, proxyPath)
-		proxy := gonet.ReverseProxy(r.URL.Path, targetHost, targetPath, 10*time.Second) // nolint gomnd
-		proxy.ServeHTTP(w, r)
-
-		return
-	}
-
-	if l.Echo != "" {
-		_, _ = fmt.Fprint(w, l.Echo)
-		return
-	}
-
-	if l.Index != "" {
-		// http://nginx.org/en/docs/http/ngx_http_index_module.html
-		// processes requests ending with the slash character (‘/’).
-		if strings.HasSuffix(r.URL.Path, "/") {
-			redirectURL := filepath.Join(r.URL.Path, l.Index)
-			http.Redirect(w, r, redirectURL, http.StatusFound)
-
-			return
-		}
-	}
-
-	serveFile := r.URL.Path
-	if l.Root != "" {
-		serveFile = filepath.Join(l.Root, serveFile)
-	} else {
-		serveFile = strings.TrimPrefix(serveFile, "/")
-	}
-
-	if r.URL.Path == "/" && file.SingleFileExists(serveFile) != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprint(w, welcome)
-
-		return
-	}
-
-	if strings.HasSuffix(serveFile, "/index.html") {
-		r.URL.Path = "avoid index.html redirect... in ServeHTTP"
-	}
-
-	http.ServeFile(w, r, serveFile)
 }
 
 // TryAppend tries to append the given suffix if it does not exists in the s.
