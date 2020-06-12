@@ -3,9 +3,12 @@ package nginxconf
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/bingoohuang/gonginx/util"
 
@@ -14,6 +17,9 @@ import (
 )
 
 func (l Location) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	dumpRequest, _ := httputil.DumpRequest(r, true)
+	logrus.Infof("received request %s", dumpRequest)
+
 	// proxy_pass url 反向代理的坑 https://xuexb.github.io/learn-nginx/example/proxy_pass.html
 	if l.ProxyPass != nil {
 		proxyPath := strings.TrimPrefix(r.URL.Path, l.Path)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/bingoohuang/gonginx/nginxconf"
 	"github.com/bingoohuang/gou/file"
@@ -27,8 +26,6 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("failed to pare config file%s: %v", configFile, err)
 	}
-
-	fmt.Printf("config %+v\n", conf)
 
 	servers := conf.ParseServers()
 	if len(servers) == 0 {
