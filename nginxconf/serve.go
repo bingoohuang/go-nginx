@@ -7,17 +7,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bingoohuang/gonginx/util"
+
 	"github.com/bingoohuang/gonet"
 	"github.com/bingoohuang/gou/file"
 )
 
 func (l Location) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// proxy_pass url 反向代理的坑 https://xuexb.github.io/learn-nginx/example/proxy_pass.html
 	if l.ProxyPass != nil {
 		proxyPath := strings.TrimPrefix(r.URL.Path, l.Path)
-		targetHost := l.ProxyPass.Host
-		targetPath := filepath.Join(l.ProxyPass.Path, proxyPath)
-		proxy := gonet.ReverseProxy(r.URL.Path, targetHost, targetPath, 10*time.Second) // nolint gomnd
-		proxy.ServeHTTP(w, r)
+		targetPath := util.TryPrepend(filepath.Join(l.ProxyPass.Path, proxyPath), "/")
+		p := gonet.ReverseProxy(r.URL.Path, l.ProxyPass.Host, targetPath, 10*time.Second) // nolint gomnd
+		p.ServeHTTP(w, r)
 
 		return
 	}

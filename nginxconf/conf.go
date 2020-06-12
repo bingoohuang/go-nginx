@@ -5,7 +5,10 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
+
+	"github.com/bingoohuang/gonginx/util"
 
 	"github.com/bingoohuang/gou/str"
 	"github.com/sirupsen/logrus"
@@ -56,15 +59,17 @@ func (m Modifier) Priority() ModifierPriority {
 
 // Location is the location.
 type Location struct {
-	Priority  ModifierPriority // 匹配级别，从0开始，数字越小，匹配优先级越高
-	Modifier  Modifier
-	Path      string
-	Index     string
-	Root      string
-	Alias     string
-	ProxyPass *url.URL
-	Echo      string
-	Pattern   *regexp.Regexp
+	Seq                int              // 定义的顺序
+	Priority           ModifierPriority // 匹配级别，从0开始，数字越小，匹配优先级越高
+	Modifier           Modifier
+	Path               string
+	Index              string
+	Root               string
+	Alias              string
+	ProxyPass          *url.URL
+	ProxyPassLastSlash bool // 是否最后有/
+	Echo               string
+	Pattern            *regexp.Regexp
 }
 
 func (l Location) Matches(p ModifierPriority, r *http.Request) bool {
@@ -78,7 +83,7 @@ func (l Location) Matches(p ModifierPriority, r *http.Request) bool {
 	case ModifierExactly:
 		return l.Path == path
 	case ModifierForward:
-		return strings.HasPrefix(path, TryAppend(l.Path, "/"))
+		return strings.HasPrefix(path, util.TryAppend(l.Path, "/"))
 	case ModifierRegular:
 		return l.Pattern.FindString(path) != ""
 	default:
@@ -86,16 +91,26 @@ func (l Location) Matches(p ModifierPriority, r *http.Request) bool {
 	}
 }
 
-// TryAppend tries to append the given suffix if it does not exists in the s.
-func TryAppend(s, suffix string) string {
-	if strings.HasSuffix(s, suffix) {
-		return s
+type Locations []Location
+
+func (ls Locations) Len() int { return len(ls) }
+
+func (ls Locations) Less(i, j int) bool {
+	if ls[i].Priority < ls[j].Priority {
+		return true
 	}
 
-	return s + "/"
+	switch ls[i].Priority {
+	case ModifierForward, ModifierNone:
+		if len(ls[i].Path) > len(ls[j].Path) {
+			return true
+		}
+	}
+
+	return ls[i].Seq < ls[j].Seq
 }
 
-type Locations []Location
+func (ls Locations) Swap(i, j int) { ls[i], ls[j] = ls[j], ls[i] }
 
 type NginxServer struct {
 	Listen    int
@@ -105,72 +120,28 @@ type NginxServer struct {
 func (ls Locations) FindLocation(r *http.Request) *Location {
 	path := r.URL.Path
 
-	if l := ls.findByModifierExactly(path); l != nil {
-		return l
-	}
-
-	if l := ls.findByModifierForward(path); l != nil {
-		return l
-	}
-
-	if l := ls.findByModifierRegular(path); l != nil {
-		return l
-	}
-
-	if l := ls.findByModifierNone(path); l != nil {
-		return l
-	}
-
-	return nil
-}
-
-func (ls Locations) findByModifierNone(path string) (longest *Location) {
 	for _, l := range ls {
-		if l.Priority == ModifierNone && strings.HasPrefix(path, l.Path) {
-			ll := l
-
-			if longest == nil || len(longest.Path) < len(ll.Path) {
-				longest = &ll
+		switch l.Priority {
+		case ModifierExactly:
+			if l.Path == path {
+				return &l
+			}
+		case ModifierForward:
+			if path == l.Path || strings.HasPrefix(path, util.TryAppend(l.Path, "/")) {
+				return &l
+			}
+		case ModifierRegular:
+			if l.Pattern.FindString(path) != "" {
+				return &l
+			}
+		case ModifierNone:
+			if strings.HasPrefix(path, l.Path) {
+				return &l
 			}
 		}
 	}
 
-	return longest
-}
-
-func (ls Locations) findByModifierRegular(path string) *Location {
-	for _, l := range ls {
-		if l.Priority == ModifierRegular && l.Pattern.FindString(path) != "" {
-			return &l
-		}
-	}
-
 	return nil
-}
-
-func (ls Locations) findByModifierExactly(path string) *Location {
-	for _, l := range ls {
-		if l.Priority == ModifierExactly && l.Path == path {
-			return &l
-		}
-	}
-
-	return nil
-}
-
-func (ls Locations) findByModifierForward(path string) (longest *Location) {
-	for _, l := range ls {
-		if l.Priority == ModifierForward &&
-			(path == l.Path || strings.HasPrefix(path, TryAppend(l.Path, "/"))) {
-			ll := l
-
-			if longest == nil || len(longest.Path) < len(ll.Path) {
-				longest = &ll
-			}
-		}
-	}
-
-	return longest
 }
 
 func (conf NginxConfigureBlock) ParseServers() []NginxServer {
@@ -203,11 +174,15 @@ func parseServer(conf NginxConfigureBlock) (server NginxServer) {
 		case "listen":
 			server.Listen = str.ParseInt(block.Words[1])
 		case "location":
-			server.Locations = append(server.Locations, parseLocation(block))
+			l := parseLocation(block)
+			l.Seq = len(server.Locations)
+			server.Locations = append(server.Locations, l)
 		default:
 			logrus.Warnf("unsupported %+v", block)
 		}
 	}
+
+	sort.Sort(server.Locations)
 
 	return server
 }
@@ -238,12 +213,15 @@ func parseLocation(conf NginxConfigureCommand) (l Location) {
 		case "alias":
 			l.Alias = block.Words[1]
 		case "proxy_pass":
-			proxyPath, err := url.Parse(block.Words[1])
+			proxyPass := block.Words[1]
+			proxyPath, err := url.Parse(proxyPass)
+
 			if err != nil {
 				logrus.Fatalf("failed to parse proxy_pass %v", block.Words[1])
 			}
 
 			l.ProxyPass = proxyPath
+			l.ProxyPassLastSlash = strings.HasSuffix(proxyPass, "/")
 
 		case "echo":
 			l.Echo = block.Words[1]
