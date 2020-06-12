@@ -15,9 +15,13 @@ type ResponseWriterLog struct {
 	body   string
 }
 
-func (r *ResponseWriterLog) WriteHeader(statusCode int) { r.w.WriteHeader(statusCode) }
-func (r *ResponseWriterLog) Header() http.Header        { return r.head }
-func (r *ResponseWriterLog) ContentType() string        { return r.head.Get("Content-Type") }
+func (r *ResponseWriterLog) WriteHeader(statusCode int) {
+	r.w.WriteHeader(statusCode)
+	r.status = statusCode
+}
+
+func (r *ResponseWriterLog) Header() http.Header { return r.head }
+func (r *ResponseWriterLog) ContentType() string { return r.head.Get("Content-Type") }
 
 func (r *ResponseWriterLog) Write(bytes []byte) (int, error) {
 	switch r.ContentType() {

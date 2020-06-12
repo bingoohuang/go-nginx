@@ -5,32 +5,30 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"time"
 
-	"github.com/bingoohuang/gonginx/util"
-
-	"github.com/bingoohuang/gonet"
 	"github.com/bingoohuang/gou/file"
 )
 
-func (l Location) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
-	w := util.WrapLog(wr, r)
-	defer w.LogResponse()
-
+func (l Location) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// proxy_pass url 反向代理的坑 https://xuexb.github.io/learn-nginx/example/proxy_pass.html
 	if l.ProxyPass != nil {
-		proxyPath := strings.TrimPrefix(r.URL.Path, l.Path)
-		targetPath := util.TryPrepend(filepath.Join(l.ProxyPass.Path, proxyPath), "/")
-		p := gonet.ReverseProxy(r.URL.Path, l.ProxyPass.Host, targetPath, 10*time.Second) // nolint gomnd
-		p.ServeHTTP(w, r)
+		l.ProxyPass.Do(w, r)
 
 		return
 	}
 
-	if l.Echo != "" {
-		echo := l.Echo
-		echo = strings.ReplaceAll(echo, "$request", r.RequestURI)
-		_, _ = fmt.Fprint(w, echo)
+	if l.DefaultType != nil {
+		l.DefaultType.Do(w, r)
+	}
+
+	if l.Return != nil {
+		l.Return.Do(w, r)
+
+		return
+	}
+
+	if l.Echo != nil {
+		l.Echo.Do(w, r)
 
 		return
 	}
@@ -39,8 +37,7 @@ func (l Location) ServeHTTP(wr http.ResponseWriter, r *http.Request) {
 		// http://nginx.org/en/docs/http/ngx_http_index_module.html
 		// processes requests ending with the slash character (‘/’).
 		if strings.HasSuffix(r.URL.Path, "/") {
-			redirectURL := filepath.Join(r.URL.Path, l.Index)
-			http.Redirect(w, r, redirectURL, http.StatusFound)
+			http.Redirect(w, r, filepath.Join(r.URL.Path, l.Index), http.StatusFound)
 
 			return
 		}

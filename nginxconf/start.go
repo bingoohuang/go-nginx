@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bingoohuang/gonginx/util"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,5 +39,8 @@ func (s NginxServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l.ServeHTTP(w, r)
+	wr := util.WrapLog(w, r)
+	defer wr.LogResponse()
+
+	l.ServeHTTP(wr, r)
 }

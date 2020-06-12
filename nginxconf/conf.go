@@ -1,14 +1,9 @@
 package nginxconf
 
 import (
-	"net/http"
-	"net/url"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
-
-	"github.com/bingoohuang/gonginx/util"
 
 	"github.com/bingoohuang/gou/str"
 	"github.com/sirupsen/logrus"
@@ -57,91 +52,9 @@ func (m Modifier) Priority() ModifierPriority {
 	}
 }
 
-// Location is the location.
-type Location struct {
-	Seq                int              // 定义的顺序
-	Priority           ModifierPriority // 匹配级别，从0开始，数字越小，匹配优先级越高
-	Modifier           Modifier
-	Path               string
-	Index              string
-	Root               string
-	Alias              string
-	ProxyPass          *url.URL
-	ProxyPassLastSlash bool // 是否最后有/
-	Echo               string
-	Pattern            *regexp.Regexp
-}
-
-func (l Location) Matches(p ModifierPriority, r *http.Request) bool {
-	if p != l.Priority {
-		return false
-	}
-
-	path := r.URL.Path
-
-	switch p {
-	case ModifierExactly:
-		return l.Path == path
-	case ModifierForward:
-		return strings.HasPrefix(path, util.TryAppend(l.Path, "/"))
-	case ModifierRegular:
-		return l.Pattern.FindString(path) != ""
-	default:
-		return strings.HasPrefix(path, l.Path)
-	}
-}
-
-type Locations []Location
-
-func (ls Locations) Len() int { return len(ls) }
-
-func (ls Locations) Less(i, j int) bool {
-	if ls[i].Priority < ls[j].Priority {
-		return true
-	}
-
-	switch ls[i].Priority {
-	case ModifierForward, ModifierNone:
-		if len(ls[i].Path) > len(ls[j].Path) {
-			return true
-		}
-	}
-
-	return ls[i].Seq < ls[j].Seq
-}
-
-func (ls Locations) Swap(i, j int) { ls[i], ls[j] = ls[j], ls[i] }
-
 type NginxServer struct {
 	Listen    int
 	Locations Locations
-}
-
-func (ls Locations) FindLocation(r *http.Request) *Location {
-	path := r.URL.Path
-
-	for _, l := range ls {
-		switch l.Priority {
-		case ModifierExactly:
-			if l.Path == path {
-				return &l
-			}
-		case ModifierForward:
-			if path == l.Path || strings.HasPrefix(path, util.TryAppend(l.Path, "/")) {
-				return &l
-			}
-		case ModifierRegular:
-			if l.Pattern.FindString(path) != "" {
-				return &l
-			}
-		case ModifierNone:
-			if strings.HasPrefix(path, l.Path) {
-				return &l
-			}
-		}
-	}
-
-	return nil
 }
 
 func (conf NginxConfigureBlock) ParseServers() []NginxServer {
@@ -185,50 +98,4 @@ func parseServer(conf NginxConfigureBlock) (server NginxServer) {
 	sort.Sort(server.Locations)
 
 	return server
-}
-
-func parseLocation(conf NginxConfigureCommand) (l Location) {
-	if len(conf.Words) == 2 { // nolint gomnd
-		l.Path = conf.Words[1]
-	} else {
-		l.Modifier = Modifier(conf.Words[1])
-		l.Path = conf.Words[2]
-	}
-
-	if l.Priority = l.Modifier.Priority(); l.Priority == ModifierRegular {
-		reg := l.Path
-		if l.Modifier == "~*" {
-			reg = "(?i)" + reg
-		}
-
-		l.Pattern = regexp.MustCompile(reg)
-	}
-
-	for _, block := range conf.Block {
-		switch strings.ToLower(block.Words[0]) {
-		case "index":
-			l.Index = block.Words[1]
-		case "root":
-			l.Root = block.Words[1]
-		case "alias":
-			l.Alias = block.Words[1]
-		case "proxy_pass":
-			proxyPass := block.Words[1]
-			proxyPath, err := url.Parse(proxyPass)
-
-			if err != nil {
-				logrus.Fatalf("failed to parse proxy_pass %v", block.Words[1])
-			}
-
-			l.ProxyPass = proxyPath
-			l.ProxyPassLastSlash = strings.HasSuffix(proxyPass, "/")
-
-		case "echo":
-			l.Echo = block.Words[1]
-		default:
-			logrus.Warnf("unsupported %+v", block.Words)
-		}
-	}
-
-	return l
 }
