@@ -14,7 +14,7 @@ http {
     server {
         listen  15001 default_server;
         location ^~ /ESeal/api/ {
-            proxy_pass http://127.0.0.1:15002/;
+           proxy_pass http://127.0.0.1:15002/;
         }
         location / {
             index html/index.html;
@@ -30,6 +30,7 @@ http {
      server {
         listen  15002 default_server;
         location / { index html/index.html; }
+        location /demo { echo $request; }
      }
 }
 ```
