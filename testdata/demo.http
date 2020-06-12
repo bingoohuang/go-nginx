@@ -1,0 +1,15 @@
+###
+POST http://127.0.0.1:15001/ESeal/api/form?name=huang
+Content-Type: application/x-www-form-urlencoded
+
+id=99&content=new-element
+
+###
+POST http://127.0.0.1:15001/ESeal/api/JSON?name=huang
+Content-Type: application/json
+
+{
+  "id": 99
+}
+
+
