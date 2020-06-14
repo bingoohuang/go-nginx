@@ -3,10 +3,12 @@ package nginxconf
 import (
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 
-	"github.com/bingoohuang/gonginx/util"
 	"github.com/sirupsen/logrus"
+
+	"github.com/bingoohuang/gonginx/util"
 )
 
 type Locations []Location
@@ -28,28 +30,56 @@ func parseLocation(conf NginxConfigureCommand) (l Location) {
 		l.Pattern = regexp.MustCompile(reg)
 	}
 
+	l.Processors = make([]LocationProcessor, 0)
+
 	for _, block := range conf.Block {
-		switch strings.ToLower(block.Words[0]) {
-		case "index":
-			l.Index = block.Words[1]
-		case "root":
-			l.Root = block.Words[1]
-		case "alias":
-			l.Alias = block.Words[1]
-		case "proxy_pass":
-			l.ProxyPass = ProxyPassParse(l.Path, block.Words[1:])
-		case "echo":
-			l.Echo = EchoParse(l.Path, block.Words[1:])
-		case "return":
-			l.Return = ReturnParse(block.Words[1:])
-		case "default_type":
-			l.DefaultType = DefaultTypeParse(block.Words[1:])
-		default:
-			logrus.Warnf("unsupported %+v", block.Words)
+		firstWord := strings.ToLower(block.Words[0])
+
+		if l.existsProcessorParse(firstWord, block) {
+			continue
+		}
+
+		if l.createProcessor(firstWord, block) {
+			continue
+		}
+
+		logrus.Warnf("unsupported %+v", block.Words)
+	}
+
+	sort.Sort(l.Processors)
+
+	return l
+}
+
+func (l *Location) createProcessor(firstWord string, block NginxConfigureCommand) bool {
+	for _, v := range LocationFactories {
+		if v.Name()[firstWord] {
+			p := v.Create()
+			if err := p.Parse(l.Path, firstWord, block.Words[1:]); err != nil {
+				logrus.Fatalf("invalid conf for %v error %+v", block, err)
+			}
+
+			l.Processors = append(l.Processors, p)
+
+			return true
 		}
 	}
 
-	return l
+	return false
+}
+
+func (l *Location) existsProcessorParse(firstWord string, block NginxConfigureCommand) bool {
+	for _, v := range l.Processors {
+		if v.Name()[firstWord] {
+			if err := v.Parse(l.Path, firstWord, block.Words[1:]); err != nil {
+				logrus.Fatalf("invalid conf for %v error %+v", block, err)
+			}
+
+			return true
+		}
+	}
+
+	return false
 }
 
 func (ls Locations) FindLocation(r *http.Request) *Location {

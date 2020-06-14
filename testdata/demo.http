@@ -1,11 +1,11 @@
 ###
-POST http://127.0.0.1:15001/ESeal/api/form?name=huang
+POST http://127.0.0.1:15001/proxy/form?name=huang
 Content-Type: application/x-www-form-urlencoded
 
 id=99&content=new-element
 
 ###
-POST http://127.0.0.1:15001/ESeal/api/JSON?name=huang
+POST http://127.0.0.1:15001/proxy/JSON?name=huang
 Content-Type: application/json
 
 {
@@ -17,3 +17,12 @@ GET http://127.0.0.1:15001/json1
 
 ###
 GET http://127.0.0.1:15001/json2
+
+###
+GET http://127.0.0.1:15001/alias/conf.go
+
+###
+GET http://127.0.0.1:15001
+
+###
+GET http://127.0.0.1:15003
