@@ -2,8 +2,9 @@ package nginxconf
 
 import (
 	"container/list"
-	"fmt"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // NginxConfigureBlock represent a block in nginx configure file.
@@ -21,16 +22,16 @@ type NginxConfigureCommand struct {
 
 type parser struct {
 	sync.Mutex
-	*scanner
+	*Scanner
 }
 
-// nolint gochecknoglobals
+// nolint:gochecknoglobals
 var (
 	emptyBlock   = NginxConfigureBlock(nil)
 	emptyCommand = NginxConfigureCommand{}
 )
 
-// Parse the content of nginx configure file into NginxConfigureBlock
+// Parse the content of nginx configure file into NginxConfigureBlock.
 func Parse(content []byte) (blk NginxConfigureBlock, err error) {
 	var p parser
 	return p.parse(content)
@@ -45,25 +46,25 @@ func (p *parser) parse(content []byte) (blk NginxConfigureBlock, err error) {
 		}
 	}()
 
-	p.scanner = newScanner(content)
+	p.Scanner = NewScanner(content)
 	cmds := list.New()
 
 ForLoop:
 	for {
-		token := p.scan()
-		switch token.typ {
-		case eof:
+		token := p.Scan()
+		switch token.Typ {
+		case EOF:
 			break ForLoop
-		case word:
-			cmd, err := p.scanCommand(token.lit)
+		case Word:
+			cmd, err := p.scanCommand(token.Lit)
 			if err != nil {
 				return nil, err
 			}
 			cmds.PushBack(cmd)
-		case comment:
+		case Comment:
 			continue
 		default:
-			return nil, fmt.Errorf("unexpected global token %s at line %d", token.typ, p.line)
+			return nil, errors.Wrapf(ErrSyntax, "unexpected global token %s at line %d", token.Typ, p.line)
 		}
 	}
 
@@ -90,10 +91,10 @@ func (p *parser) scanCommand(startWord string) (NginxConfigureCommand, error) {
 
 ForLoop:
 	for {
-		token := p.scan()
-		switch token.typ {
-		case eof:
-			return emptyCommand, fmt.Errorf("missing terminating token at line %d", p.line)
+		token := p.Scan()
+		switch token.Typ {
+		case EOF:
+			return emptyCommand, errors.Wrapf(ErrSyntax, "missing terminating token at line %d", p.line)
 		case braceOpen:
 			block, err = p.scanBlock()
 			if err != nil {
@@ -102,12 +103,12 @@ ForLoop:
 			break ForLoop
 		case semicolon:
 			break ForLoop
-		case comment:
+		case Comment:
 			continue
-		case word:
-			words.PushBack(token.lit)
+		case Word:
+			words.PushBack(token.Lit)
 		default:
-			return emptyCommand, fmt.Errorf("unexpected command token %s at line %d", token.typ, p.line)
+			return emptyCommand, errors.Wrapf(ErrSyntax, "unexpected command token %s at line %d", token.Typ, p.line)
 		}
 	}
 
@@ -127,22 +128,22 @@ func (p *parser) scanBlock() (NginxConfigureBlock, error) {
 	cmds := list.New()
 ForLoop:
 	for {
-		token := p.scan()
-		switch token.typ {
-		case eof:
-			return emptyBlock, fmt.Errorf("missing terminating token at line %d", p.line)
+		token := p.Scan()
+		switch token.Typ {
+		case EOF:
+			return emptyBlock, errors.Wrapf(ErrSyntax, "missing terminating token at line %d", p.line)
 		case braceClose:
 			break ForLoop
-		case comment:
+		case Comment:
 			continue
-		case word:
-			cmd, err := p.scanCommand(token.lit)
+		case Word:
+			cmd, err := p.scanCommand(token.Lit)
 			if err != nil {
 				return emptyBlock, err
 			}
 			cmds.PushBack(cmd)
 		default:
-			return emptyBlock, fmt.Errorf("unexpected block token %s at line %d", token.typ, p.line)
+			return emptyBlock, errors.Wrapf(ErrSyntax, "unexpected block token %s at line %d", token.Typ, p.line)
 		}
 	}
 

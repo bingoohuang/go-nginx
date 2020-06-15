@@ -1,7 +1,9 @@
-package nginxconf
+package nginxconf_test
 
 import (
 	"testing"
+
+	"github.com/bingoohuang/gonginx/nginxconf"
 )
 
 func TestParser(t *testing.T) {
@@ -14,20 +16,20 @@ WORD3 {
     ;
     #COMMENT
 }`)
-	expected := NginxConfigureBlock([]NginxConfigureCommand{
+	expected := nginxconf.NginxConfigureBlock([]nginxconf.NginxConfigureCommand{
 		{
 			Words: []string{"WORD1", "WORD2"},
 		},
 		{
 			Words: []string{"WORD3"},
-			Block: NginxConfigureBlock([]NginxConfigureCommand{
+			Block: nginxconf.NginxConfigureBlock([]nginxconf.NginxConfigureCommand{
 				{
 					Words: []string{"WORD4", "SQ1", "DQ\t1"},
 				},
 			}),
 		},
 	})
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err != nil {
 		t.Error("parse fail:", err.Error())
@@ -42,7 +44,7 @@ WORD3 {
 
 func TestParseUnterminatedCommand(t *testing.T) {
 	content := []byte(`WORD  `)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -51,7 +53,7 @@ func TestParseUnterminatedCommand(t *testing.T) {
 
 func TestParseUnterminatedBlock(t *testing.T) {
 	content := []byte(`WORD { `)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -60,7 +62,7 @@ func TestParseUnterminatedBlock(t *testing.T) {
 
 func TestParseInvalidTokenInCommand(t *testing.T) {
 	content := []byte(`WORD };`)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -69,7 +71,7 @@ func TestParseInvalidTokenInCommand(t *testing.T) {
 
 func TestParseInvalidTokenInBlock(t *testing.T) {
 	content := []byte(`WORD { {`)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -78,7 +80,7 @@ func TestParseInvalidTokenInBlock(t *testing.T) {
 
 func TestParseInvalidCommandInBlock(t *testing.T) {
 	content := []byte(`WORD { WORD`)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -87,7 +89,7 @@ func TestParseInvalidCommandInBlock(t *testing.T) {
 
 func TestParseInvalidFirstToken(t *testing.T) {
 	content := []byte(`}`)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
@@ -96,14 +98,14 @@ func TestParseInvalidFirstToken(t *testing.T) {
 
 func TestParseWithScannerFailure(t *testing.T) {
 	content := []byte(`"WORD\|"`)
-	block, err := Parse(content)
+	block, err := nginxconf.Parse(content)
 
 	if err == nil {
 		t.Error("unexpected parse result:", block)
 	}
 }
 
-func equalBlock(a, b NginxConfigureBlock) bool {
+func equalBlock(a, b nginxconf.NginxConfigureBlock) bool {
 	if len(a) != len(b) {
 		return false
 	}

@@ -23,7 +23,7 @@ type Processor interface {
 	Do(l Location, w http.ResponseWriter, r *http.Request) ProcessResult
 }
 
-// nolint gochecknoglobals
+// nolint:gochecknoglobals
 var factories = make([]ProcessorFactory, 0)
 
 func RegisterFactory(n ProcessorFactory) {

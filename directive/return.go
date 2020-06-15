@@ -7,7 +7,7 @@ import (
 	"github.com/bingoohuang/gou/str"
 )
 
-// nolint gochecknoinits
+// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&returnNaming{})
 }
@@ -24,8 +24,8 @@ func (returnNaming) Name() map[string]bool {
 	}
 }
 
-// Return means http://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return
-// Syntax:	return code [text];
+// Return means http://nginx.org/en/docs/http/ngx_http_rewrite_module.html#return.
+// Syntax:	return code [text];.
 type Return struct {
 	returnNaming
 

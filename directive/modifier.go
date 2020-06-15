@@ -1,14 +1,14 @@
 package directive
 
 // ModifierPriority defines the priority of the modifier.
-// https://end0tknr.wordpress.com/2015/12/22/location-match-priority-in-nginx/
-// https://artfulrobot.uk/blog/untangling-nginx-location-block-matching-algorithm
-// https://blog.csdn.net/qq_15766181/article/details/72829672
-// priority	| prefix       	                          | example
-// 1        | = (exactly)	                          | location = /path
-// 2        | ^~ (forward match)	                  | location = /image
-// 3        | ~ or ~* (regular & case-(in)sensitive)  | location ~ /image/
-// 4        | NONE (forward match)                    | location /image
+// https://end0tknr.wordpress.com/2015/12/22/location-match-priority-in-nginx/.
+// https://artfulrobot.uk/blog/untangling-nginx-location-block-matching-algorithm.
+// https://blog.csdn.net/qq_15766181/article/details/72829672.
+// priority	| prefix       	                          | example.
+// 1        | = (exactly)	                          | location = /path.
+// 2        | ^~ (forward match)	                  | location = /image.
+// 3        | ~ or ~* (regular & case-(in)sensitive)  | location ~ /image/.
+// 4        | NONE (forward match)                    | location /image.
 type ModifierPriority int
 
 // https://stackoverflow.com/questions/5238377/nginx-location-priority

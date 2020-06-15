@@ -2,7 +2,7 @@ package directive
 
 import "net/http"
 
-// nolint gochecknoinits
+// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&defaultTypeNaming{})
 }

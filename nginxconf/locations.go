@@ -11,7 +11,7 @@ import (
 )
 
 func parseLocation(conf NginxConfigureCommand) (l directive.Location) {
-	if len(conf.Words) == 2 { // nolint gomnd
+	if len(conf.Words) == 2 { // nolint:gomnd
 		l.Path = conf.Words[1]
 	} else {
 		l.Modifier = directive.Modifier(conf.Words[1])

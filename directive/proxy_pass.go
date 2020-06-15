@@ -14,7 +14,7 @@ import (
 
 // proxy_pass url 反向代理的坑 https://xuexb.github.io/learn-nginx/example/proxy_pass.html
 
-// nolint gochecknoinits
+// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&proxyPassNaming{})
 }
@@ -60,7 +60,7 @@ func (r *proxyPass) Parse(path string, name string, params []string) error {
 func (r *proxyPass) Do(l Location, w http.ResponseWriter, rq *http.Request) ProcessResult {
 	proxyPath := strings.TrimPrefix(r.URL.Path, r.LocationPath)
 	targetPath := util.TryPrepend(filepath.Join(r.URL.Path, proxyPath), "/")
-	p := gonet.ReverseProxy(r.URL.Path, r.URL.Host, targetPath, 10*time.Second) // nolint gomnd
+	p := gonet.ReverseProxy(r.URL.Path, r.URL.Host, targetPath, 10*time.Second) // nolint:gomnd
 	p.ServeHTTP(w, rq)
 
 	return ProcessTerminate

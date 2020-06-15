@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// nolint gochecknoglobals
+// nolint:gochecknoglobals
 var (
 	configFile string
 )
@@ -32,7 +32,7 @@ func main() {
 	servers := conf.ParseServers()
 	if len(servers) == 0 {
 		servers = append(servers, nginxconf.NginxServer{
-			Listen: 8000, // nolint gomnd
+			Listen: 8000, // nolint:gomnd
 			Locations: []directive.Location{{
 				Path: "/",
 			}},
