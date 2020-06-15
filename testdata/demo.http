@@ -26,3 +26,6 @@ GET http://127.0.0.1:15001
 
 ###
 GET http://127.0.0.1:15003
+
+### Bad Gateway
+GET http://127.0.0.1:15001/badproxy

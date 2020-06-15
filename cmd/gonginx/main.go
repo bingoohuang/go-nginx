@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 
+	"github.com/bingoohuang/gonginx/directive"
+
 	"github.com/bingoohuang/gonginx/nginxconf"
 	"github.com/bingoohuang/gou/file"
 	"github.com/sirupsen/logrus"
@@ -31,7 +33,7 @@ func main() {
 	if len(servers) == 0 {
 		servers = append(servers, nginxconf.NginxServer{
 			Listen: 8000, // nolint gomnd
-			Locations: []nginxconf.Location{{
+			Locations: []directive.Location{{
 				Path: "/",
 			}},
 		})

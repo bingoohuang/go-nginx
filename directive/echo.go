@@ -1,4 +1,4 @@
-package nginxconf
+package directive
 
 import (
 	"fmt"
@@ -8,12 +8,12 @@ import (
 
 // nolint gochecknoinits
 func init() {
-	AppendLocationFactory(&echoNaming{})
+	RegisterFactory(&echoNaming{})
 }
 
 type echoNaming struct{}
 
-func (i echoNaming) Create() LocationProcessor {
+func (i echoNaming) Create() Processor {
 	return &echo{echoNaming: i, Values: make([]string, 0)}
 }
 

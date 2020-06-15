@@ -6,6 +6,17 @@ just a tiny toy tool
 
 1. `go build ./cmd/gonginx/` or `GOOS=linux GOARCH=amd64 go build ./cmd/gonginx/`
 
+
+## Features
+
+1. listen :8001
+1. location ...
+1. proxy_pass
+1. return
+1. echo
+1. index root alias
+1. default_type
+
 ## Configuration
 
 ```nginx

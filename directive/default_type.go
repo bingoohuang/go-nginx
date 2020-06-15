@@ -1,15 +1,15 @@
-package nginxconf
+package directive
 
 import "net/http"
 
 // nolint gochecknoinits
 func init() {
-	AppendLocationFactory(&defaultTypeNaming{})
+	RegisterFactory(&defaultTypeNaming{})
 }
 
 type defaultTypeNaming struct{}
 
-func (i defaultTypeNaming) Create() LocationProcessor {
+func (i defaultTypeNaming) Create() Processor {
 	return &defaultType{defaultTypeNaming: i}
 }
 

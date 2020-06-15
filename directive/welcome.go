@@ -1,6 +1,6 @@
-package nginxconf
+package directive
 
-const welcome = `
+const WelcomeHTML = `
 <!DOCTYPE html>
 <html>
 <head>

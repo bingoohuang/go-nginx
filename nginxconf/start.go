@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/bingoohuang/gonginx/directive"
+
 	"github.com/bingoohuang/gonginx/util"
 
 	"github.com/sirupsen/logrus"
@@ -31,7 +33,7 @@ func (s NginxServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if l == nil {
 		if r.URL.Path == "/" {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_, _ = fmt.Fprint(w, welcome)
+			_, _ = fmt.Fprint(w, directive.WelcomeHTML)
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}

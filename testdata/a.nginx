@@ -1,13 +1,20 @@
 http {
     server {
         listen  15001 default_server;
-        location ^~ /proxy/ {
+
+        location ^~ /proxy {
             proxy_pass http://127.0.0.1:15002/;
         }
+
+        location ^~ /badproxy {
+            proxy_pass http://127.0.0.1:25002/;
+        }
+
         location / {
             index index.html;
             root testdata;
         }
+
         location ^~ /alias/ {
             alias nginxconf;
         }
@@ -18,7 +25,8 @@ http {
 
         location /json1 {
             default_type application/json;
-            return 200 '{"status":"success","result":"hello world!"}';
+            return 200 '"result":"hello world!"}';
+            echo '{"status":"success",';
         }
 
         location /json2 {
@@ -30,7 +38,7 @@ http {
     server {
         listen  15002 default_server;
         location / {
-            index html/index.html;
+            echo "hello, $request";
         }
         location /demo {
             echo $request;

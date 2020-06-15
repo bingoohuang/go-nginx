@@ -1,4 +1,4 @@
-package nginxconf
+package directive
 
 import (
 	"net/http"
@@ -16,12 +16,12 @@ import (
 
 // nolint gochecknoinits
 func init() {
-	AppendLocationFactory(&proxyPassNaming{})
+	RegisterFactory(&proxyPassNaming{})
 }
 
 type proxyPassNaming struct{}
 
-func (i proxyPassNaming) Create() LocationProcessor {
+func (i proxyPassNaming) Create() Processor {
 	return &proxyPass{proxyPassNaming: i}
 }
 

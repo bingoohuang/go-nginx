@@ -1,4 +1,4 @@
-package nginxconf
+package directive
 
 import (
 	"errors"
@@ -12,12 +12,12 @@ import (
 
 // nolint gochecknoinits
 func init() {
-	AppendLocationFactory(&indexNaming{})
+	RegisterFactory(&indexNaming{})
 }
 
 type indexNaming struct{}
 
-func (i indexNaming) Create() LocationProcessor {
+func (i indexNaming) Create() Processor {
 	return &index{indexNaming: i}
 }
 
@@ -82,7 +82,7 @@ func (i *index) Do(l Location, w http.ResponseWriter, r *http.Request) ProcessRe
 
 	if r.URL.Path == "/" && file.SingleFileExists(serveFile) != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprint(w, welcome)
+		_, _ = fmt.Fprint(w, WelcomeHTML)
 
 		return ProcessTerminate
 	}
