@@ -16,6 +16,7 @@ const (
 	Terminate
 )
 
+// Processor is the directive processor in a location.
 type Processor interface {
 	Naming
 	GetProcessSeq() ProcessSeq
@@ -26,10 +27,12 @@ type Processor interface {
 // nolint:gochecknoglobals
 var factories = make([]ProcessorFactory, 0)
 
+// RegisterFactory registers a processor factory for a directive.
 func RegisterFactory(n ProcessorFactory) {
 	factories = append(factories, n)
 }
 
+// Processors is the slice of processors for sorting Interface satisfied.
 type Processors []Processor
 
 func (l Processors) Len() int { return len(l) }

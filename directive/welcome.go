@@ -1,6 +1,18 @@
 package directive
 
-const WelcomeHTML = `
+import (
+	"fmt"
+	"net/http"
+)
+
+func Welcome(w http.ResponseWriter) ProcessResult {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = fmt.Fprint(w, welcomeHTML)
+
+	return ProcessTerminate
+}
+
+const welcomeHTML = `
 <!DOCTYPE html>
 <html>
 <head>

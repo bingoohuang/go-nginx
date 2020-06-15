@@ -8,6 +8,7 @@ import (
 )
 
 type ResponseWriterLog struct {
+	*http.Request
 	w http.ResponseWriter
 
 	status int
@@ -33,12 +34,13 @@ func (r *ResponseWriterLog) Write(bytes []byte) (int, error) {
 }
 
 func (r *ResponseWriterLog) LogResponse() {
-	logrus.Infof("response Status: %d ContentType: %s Body: %s", r.status, r.ContentType(), r.body)
+	logrus.Infof("response Status: %d ContentType: %s Body: %s, Header:%v",
+		r.status, r.ContentType(), r.body, r.head)
 }
 
 func WrapLog(w http.ResponseWriter, r *http.Request) *ResponseWriterLog {
 	dump, _ := httputil.DumpRequest(r, true)
 	logrus.Infof("request RemoteAddr: %s DumpRequest: %s", r.RemoteAddr, dump)
 
-	return &ResponseWriterLog{w: w, status: http.StatusOK, head: w.Header()}
+	return &ResponseWriterLog{Request: r, w: w, status: http.StatusOK, head: w.Header()}
 }

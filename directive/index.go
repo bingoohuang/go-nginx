@@ -2,7 +2,6 @@ package directive
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -85,10 +84,7 @@ func (i *index) Do(l Location, w http.ResponseWriter, r *http.Request) ProcessRe
 	}
 
 	if r.URL.Path == "/" && file.SingleFileExists(serveFile) != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprint(w, WelcomeHTML)
-
-		return ProcessTerminate
+		return Welcome(w)
 	}
 
 	if strings.HasSuffix(serveFile, "/index.html") {

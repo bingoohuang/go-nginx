@@ -27,22 +27,16 @@ func (s NginxServer) Start() {
 	}
 }
 
-func (s NginxServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	l := s.Locations.FindLocation(r)
+func (s NginxServer) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	w := util.WrapLog(rw, r)
+	defer w.LogResponse()
 
-	if l == nil {
-		if r.URL.Path == "/" {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_, _ = fmt.Fprint(w, directive.WelcomeHTML)
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-
+	if l := s.Locations.FindLocation(r); l != nil {
+		l.ServeHTTP(w, r)
 		return
 	}
 
-	wr := util.WrapLog(w, r)
-	defer wr.LogResponse()
-
-	l.ServeHTTP(wr, r)
+	if r.URL.Path == "/" {
+		directive.Welcome(w)
+	}
 }
