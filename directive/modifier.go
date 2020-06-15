@@ -1,5 +1,7 @@
 package directive
 
+import "github.com/pkg/errors"
+
 // ModifierPriority defines the priority of the modifier.
 // https://end0tknr.wordpress.com/2015/12/22/location-match-priority-in-nginx/.
 // https://artfulrobot.uk/blog/untangling-nginx-location-block-matching-algorithm.
@@ -38,7 +40,9 @@ func (m Modifier) Priority() ModifierPriority {
 		return ModifierForward
 	case "~", "~*":
 		return ModifierRegular
-	default:
+	case "":
 		return ModifierNone
+	default:
+		panic(errors.Wrapf(ErrSyntax, "unsupported modifier %s", m))
 	}
 }
