@@ -3,6 +3,7 @@ package util
 import (
 	"net/http"
 	"net/http/httputil"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -39,7 +40,10 @@ func (r *ResponseWriterLog) LogResponse() {
 }
 
 func WrapLog(w http.ResponseWriter, r *http.Request) *ResponseWriterLog {
-	dump, _ := httputil.DumpRequest(r, true)
+	// Content-Type: multipart/form-data; boundary=------------------------7063eacb22d97aa0
+	dumpRequestBody := !strings.Contains(r.Header.Get("Content-Type"), "multipart")
+
+	dump, _ := httputil.DumpRequest(r, dumpRequestBody)
 	logrus.Infof("request RemoteAddr: %s DumpRequest: %s", r.RemoteAddr, dump)
 
 	return &ResponseWriterLog{Request: r, w: w, status: http.StatusOK, head: w.Header()}
