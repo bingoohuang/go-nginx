@@ -1,11 +1,11 @@
 ###
-POST http://127.0.0.1:15001/proxy/form?name=huang
+POST http://127.0.0.1:15001/proxy1/form?name=huang
 Content-Type: application/x-www-form-urlencoded
 
 id=99&content=new-element
 
 ###
-POST http://127.0.0.1:15001/proxy/JSON?name=huang
+POST http://127.0.0.1:15001/proxy2/JSON?name=huang
 Content-Type: application/json
 
 {

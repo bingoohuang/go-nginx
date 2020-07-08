@@ -2,8 +2,12 @@ http {
     server {
         listen  15001 default_server;
 
-        location ^~ /proxy {
+        location ^~ /proxy1 {
             proxy_pass http://127.0.0.1:15002/;
+        }
+
+        location ^~ /proxy2 {
+            proxy_pass http://127.0.0.1:15002;
         }
 
         location ^~ /badproxy {
