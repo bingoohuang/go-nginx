@@ -170,7 +170,6 @@ func (s *RunningServers) Register(server NginxServer) {
 }
 
 func (s *RunningServers) Start() {
-	serversNum := len(s.Servers)
 	for port, c := range s.Servers {
 		c.prepare()
 
@@ -181,18 +180,10 @@ func (s *RunningServers) Start() {
 
 		log.Printf("listening on %v", server.Addr)
 
-		if serversNum > 1 {
-			go func() {
-				if err := server.ListenAndServe(); err != nil {
-					log.Printf("E! ListenAndServe error: %v", err)
-				}
-			}()
-		} else {
+		go func() {
 			if err := server.ListenAndServe(); err != nil {
 				log.Printf("E! ListenAndServe error: %v", err)
 			}
-		}
-
-		serversNum--
+		}()
 	}
 }

@@ -42,4 +42,5 @@ func main() {
 	}
 
 	runningServers.Start()
+	select {}
 }
