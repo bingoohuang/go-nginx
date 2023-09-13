@@ -1,6 +1,7 @@
 package directive
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -9,10 +10,8 @@ import (
 
 	"github.com/bingoohuang/gonet"
 	"github.com/bingoohuang/gonginx/util"
-	"github.com/sirupsen/logrus"
 )
 
-// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&proxyPassNaming{})
 }
@@ -45,9 +44,8 @@ func (r *proxyPass) Parse(path string, name string, params []string) error {
 
 	proxyPass := params[0]
 	proxyPath, err := url.Parse(proxyPass)
-
 	if err != nil {
-		logrus.Fatalf("failed to parse proxy_pass %v", proxyPass)
+		log.Printf("F! failed to parse proxy_pass %v", proxyPass)
 	}
 
 	r.URL = proxyPath
@@ -65,7 +63,7 @@ func (r *proxyPass) Do(l Location, w http.ResponseWriter, rq *http.Request) Proc
 	}
 
 	targetPath := util.TryPrepend(filepath.Join(r.URL.Path, proxyPath), "/")
-	p := gonet.ReverseProxy(rq.URL.Path, r.URL.Host, targetPath, 10*time.Second) // nolint:gomnd
+	p := gonet.ReverseProxy(rq.URL.Path, r.URL.Host, targetPath, 10*time.Second)
 	p.ServeHTTP(w, rq)
 
 	return ProcessTerminate

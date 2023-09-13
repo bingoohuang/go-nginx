@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&echoNaming{})
 }

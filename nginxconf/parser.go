@@ -25,7 +25,6 @@ type parser struct {
 	*Scanner
 }
 
-// nolint:gochecknoglobals
 var (
 	emptyBlock   = NginxConfigureBlock(nil)
 	emptyCommand = NginxConfigureCommand{}

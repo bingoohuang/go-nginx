@@ -10,12 +10,12 @@ just a tiny toy tool
 ## Features
 
 1. listen :8001
-1. location ...
-1. proxy_pass
-1. return
-1. echo
-1. index root alias
-1. default_type
+2. location ...
+3. proxy_pass
+4. return
+5. echo
+6. index root alias
+7. default_type
 
 ## Configuration
 

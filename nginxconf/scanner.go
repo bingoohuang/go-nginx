@@ -21,17 +21,14 @@ const (
 	Comment
 )
 
-// nolint:gochecknoglobals
-var (
-	tokenTypeName = map[tokenType]string{
-		EOF:        "EOF",
-		braceOpen:  "BRACE_OPEN",
-		braceClose: "BRACE_CLOSE",
-		semicolon:  "SEMICOLON",
-		Word:       "WORD",
-		Comment:    "COMMENT",
-	}
-)
+var tokenTypeName = map[tokenType]string{
+	EOF:        "EOF",
+	braceOpen:  "BRACE_OPEN",
+	braceClose: "BRACE_CLOSE",
+	semicolon:  "SEMICOLON",
+	Word:       "WORD",
+	Comment:    "COMMENT",
+}
 
 func (t tokenType) String() string {
 	return tokenTypeName[t]
@@ -46,7 +43,6 @@ func (t Token) String() string {
 	return fmt.Sprintf("%s:%s", t.Typ, t.Lit)
 }
 
-// nolint:gochecknoglobals
 var (
 	EOFToken        = Token{Typ: EOF}
 	BraceOpenToken  = Token{Typ: braceOpen, Lit: "{"}
@@ -82,7 +78,7 @@ func (s *Scanner) Scan() Token {
 	s.skipWhitespace()
 	r, err := s.read()
 
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return EOFToken
 	}
 
@@ -107,7 +103,7 @@ func (s *Scanner) Scan() Token {
 }
 
 // ErrSyntax means that a syntax error occurred.
-// nolint:gochecknoglobals
+
 var ErrSyntax = errors.New("syntax error")
 
 func (s *Scanner) scanQuoted(quote rune) Token {
@@ -118,7 +114,7 @@ func (s *Scanner) scanQuoted(quote rune) Token {
 ForLoop:
 	for {
 		r, err := s.read()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			panic(errors.Wrapf(ErrSyntax, "missing terminating %v character at line %d", quote, s.line))
 		}
 		if quoted {
@@ -157,7 +153,7 @@ ForLoop:
 }
 
 func (s *Scanner) skipWhitespace() {
-	for r, err := s.read(); err != io.EOF; r, err = s.read() {
+	for r, err := s.read(); !errors.Is(err, io.EOF); r, err = s.read() {
 		if !unicode.IsSpace(r) {
 			s.unread()
 			break
@@ -170,7 +166,7 @@ func (s *Scanner) scanComment() Token {
 
 	for {
 		r, err := s.read()
-		if err == io.EOF || r == '\n' {
+		if errors.Is(err, io.EOF) || r == '\n' {
 			break
 		}
 
@@ -185,7 +181,7 @@ func (s *Scanner) scanWord() Token {
 
 	for {
 		r, err := s.read()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 

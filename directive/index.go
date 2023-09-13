@@ -9,7 +9,6 @@ import (
 	"github.com/bingoohuang/gou/file"
 )
 
-// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&indexNaming{})
 }
@@ -39,7 +38,7 @@ type index struct {
 func (i *index) GetProcessSeq() ProcessSeq { return Terminate }
 
 // ErrSyntax means that a syntax error occurred.
-// nolint:gochecknoglobals
+
 var ErrSyntax = errors.New("syntax error")
 
 func (i *index) Parse(path string, name string, params []string) error {

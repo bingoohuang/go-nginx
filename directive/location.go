@@ -1,12 +1,12 @@
 package directive
 
 import (
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/bingoohuang/gonginx/util"
-	"github.com/sirupsen/logrus"
 )
 
 type ProcessSeq int
@@ -24,7 +24,6 @@ type Processor interface {
 	Do(l Location, w http.ResponseWriter, r *http.Request) ProcessResult
 }
 
-// nolint:gochecknoglobals
 var factories = make([]ProcessorFactory, 0)
 
 // RegisterFactory registers a processor factory for a directive.
@@ -120,11 +119,15 @@ func (l *Location) Parse(directive string, params []string) bool {
 	dp := l.findProcessor(directive)
 	if dp == nil {
 		dp = l.createProcessor(directive)
-		l.Processors = append(l.Processors, dp)
+		if dp != nil {
+			l.Processors = append(l.Processors, dp)
+		} else {
+			return false
+		}
 	}
 
 	if err := dp.Parse(l.Path, directive, params); err != nil {
-		logrus.Fatalf("invalid conf for %v error %+v", params, err)
+		log.Printf("F! invalid conf for %v error %+v", params, err)
 		return false
 	}
 

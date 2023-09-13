@@ -30,7 +30,6 @@ WORD3 {
 		},
 	})
 	block, err := nginxconf.Parse(content)
-
 	if err != nil {
 		t.Error("parse fail:", err.Error())
 		t.FailNow()

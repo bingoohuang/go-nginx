@@ -1,11 +1,10 @@
 package util
 
 import (
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 )
 
 type ResponseWriterLog struct {
@@ -35,7 +34,7 @@ func (r *ResponseWriterLog) Write(bytes []byte) (int, error) {
 }
 
 func (r *ResponseWriterLog) LogResponse() {
-	logrus.Infof("response Status: %d ContentType: %s Body: %s, Header:%v",
+	log.Printf("response Status: %d ContentType: %s Body: %s, Header:%v",
 		r.status, r.ContentType(), r.body, r.head)
 }
 
@@ -44,7 +43,7 @@ func WrapLog(w http.ResponseWriter, r *http.Request) *ResponseWriterLog {
 	dumpRequestBody := !strings.Contains(r.Header.Get("Content-Type"), "multipart")
 
 	dump, _ := httputil.DumpRequest(r, dumpRequestBody)
-	logrus.Infof("request RemoteAddr: %s DumpRequest: %s", r.RemoteAddr, dump)
+	log.Printf("request RemoteAddr: %s DumpRequest: %s", r.RemoteAddr, dump)
 
 	return &ResponseWriterLog{Request: r, w: w, status: http.StatusOK, head: w.Header()}
 }

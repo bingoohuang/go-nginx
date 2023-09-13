@@ -7,7 +7,6 @@ import (
 	"github.com/bingoohuang/gou/str"
 )
 
-// nolint:gochecknoinits
 func init() {
 	RegisterFactory(&returnNaming{})
 }

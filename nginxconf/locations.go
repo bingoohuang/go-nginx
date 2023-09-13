@@ -1,17 +1,16 @@
 package nginxconf
 
 import (
+	"log"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/bingoohuang/gonginx/directive"
-
-	"github.com/sirupsen/logrus"
 )
 
 func parseLocation(conf NginxConfigureCommand) (l directive.Location) {
-	if len(conf.Words) == 2 { // nolint:gomnd
+	if len(conf.Words) == 2 {
 		l.Path = conf.Words[1]
 	} else {
 		l.Modifier = directive.Modifier(conf.Words[1])
@@ -33,7 +32,7 @@ func parseLocation(conf NginxConfigureCommand) (l directive.Location) {
 		directiveName := strings.ToLower(block.Words[0])
 
 		if !l.Parse(directiveName, block.Words[1:]) {
-			logrus.Warnf("unsupported %+v", block.Words)
+			log.Printf("W! unsupported %+v", block.Words)
 		}
 	}
 
